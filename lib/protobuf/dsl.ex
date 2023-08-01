@@ -227,15 +227,29 @@ defmodule Protobuf.DSL do
   end
 
   defp def_t_typespec(%MessageProps{enum?: true} = props, _extension_props) do
-    quote do
-      @type t() :: unquote(Protobuf.DSL.Typespecs.quoted_enum_typespec(props))
+    if Code.ensure_loaded?(ModuleInADep) do
+      quote do
+        use TypeCheck
+        @type! t() :: unquote(Protobuf.DSL.Typespecs.quoted_enum_typespec(props))
+      end
+    else
+      quote do
+        @type t() :: unquote(Protobuf.DSL.Typespecs.quoted_enum_typespec(props))
+      end
     end
   end
 
   defp def_t_typespec(%MessageProps{} = props, _extension_props = nil) do
+    if Code.ensure_loaded?(ModuleInADep) do
+      quote do
+        use TypeCheck
+        @type! t() :: unquote(Protobuf.DSL.Typespecs.quoted_message_typespec(props))
+      end
+    else
     quote do
       @type t() :: unquote(Protobuf.DSL.Typespecs.quoted_message_typespec(props))
     end
+  end
   end
 
   defp def_t_typespec(_props, _extension_props) do
