@@ -227,7 +227,7 @@ defmodule Protobuf.DSL do
   end
 
   defp def_t_typespec(%MessageProps{enum?: true} = props, _extension_props) do
-    if Code.ensure_loaded?(ModuleInADep) do
+    if Code.ensure_loaded?(TypeCheck) do
       quote do
         use TypeCheck
         @type! t() :: unquote(Protobuf.DSL.Typespecs.quoted_enum_typespec(props))
@@ -240,7 +240,7 @@ defmodule Protobuf.DSL do
   end
 
   defp def_t_typespec(%MessageProps{} = props, _extension_props = nil) do
-    if Code.ensure_loaded?(ModuleInADep) do
+    if Code.ensure_loaded?(TypeCheck) do
       quote do
         use TypeCheck
         @type! t() :: unquote(Protobuf.DSL.Typespecs.quoted_message_typespec(props))
