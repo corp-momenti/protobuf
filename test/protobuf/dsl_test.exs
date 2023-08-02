@@ -6,6 +6,19 @@ defmodule Protobuf.DSLTest do
   alias Protobuf.{FieldProps, MessageProps}
   alias TestMsg.{Foo, Foo2, Proto3Optional}
 
+  test "can use TypeCheck" do
+    defmodule Asd do
+      use TypeCheck
+
+      @spec foo(TestMsg.Foo2.t()) :: TestMsg.Foo2.t()
+      def foo(foo) do
+        foo
+      end
+    end
+
+    assert 123 == Asd.foo(123)
+  end
+
   test "default syntax is proto2" do
     defmodule DefaultSyntax do
       use Protobuf

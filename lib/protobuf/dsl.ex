@@ -208,8 +208,9 @@ defmodule Protobuf.DSL do
 
         # Newest version of this library generate both the t/0 type as well as the struct.
         true ->
-          unquote(def_t_typespec(msg_props, extension_props))
+          # unquote(def_t_typespec(msg_props, extension_props))
           unquote(gen_defstruct(msg_props))
+          unquote(def_t_typecheck_typespec(msg_props))
       end
 
       unquote(msg_props.enum? && Protobuf.DSL.Enum.quoted_enum_functions(msg_props))
@@ -226,30 +227,42 @@ defmodule Protobuf.DSL do
     end
   end
 
-  defp def_t_typespec(%MessageProps{enum?: true} = props, _extension_props) do
+  defp def_t_typecheck_typespec(%MessageProps{enum?: true} = props) do
     if Code.ensure_loaded?(TypeCheck) do
+      import Kernel, except: [@: 1]
       quote do
-        use TypeCheck
+        use TypeCheck, overrides: [{&Protobuf.Wire.Types.wire_type/0, &Protobuf.TypeCheck.Wire.Types.wire_type/0}]
+
         @type! t() :: unquote(Protobuf.DSL.Typespecs.quoted_enum_typespec(props))
-      end
-    else
-      quote do
-        @type t() :: unquote(Protobuf.DSL.Typespecs.quoted_enum_typespec(props))
       end
     end
   end
 
-  defp def_t_typespec(%MessageProps{} = props, _extension_props = nil) do
+  defp def_t_typecheck_typespec(%MessageProps{} = props) do
     if Code.ensure_loaded?(TypeCheck) do
+      import Kernel, except: [@: 1]
       quote do
-        use TypeCheck
-        @type! t() :: unquote(Protobuf.DSL.Typespecs.quoted_message_typespec(props))
+        use TypeCheck, overrides: [{&Protobuf.Wire.Types.wire_type/0, &Protobuf.TypeCheck.Wire.Types.wire_type/0}]
+
+        @type! t()  :: unquote(Protobuf.DSL.Typespecs.quoted_message_typespec(props))
       end
-    else
+    end
+  end
+
+  defp def_t_typecheck_typespec(_props) do
+    nil
+  end
+
+  defp def_t_typespec(%MessageProps{enum?: true} = props, _extension_props) do
+    quote do
+      @type t() :: unquote(Protobuf.DSL.Typespecs.quoted_enum_typespec(props))
+    end
+  end
+
+  defp def_t_typespec(%MessageProps{} = props, _extension_props = nil) do
     quote do
       @type t() :: unquote(Protobuf.DSL.Typespecs.quoted_message_typespec(props))
     end
-  end
   end
 
   defp def_t_typespec(_props, _extension_props) do
