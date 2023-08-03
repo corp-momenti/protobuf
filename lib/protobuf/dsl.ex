@@ -210,7 +210,7 @@ defmodule Protobuf.DSL do
         true ->
           # unquote(def_t_typespec(msg_props, extension_props))
           unquote(gen_defstruct(msg_props))
-          unquote(def_t_typecheck_typespec(msg_props))
+          unquote(Protobuf.TypeCheck.def_t_typespec(msg_props))
       end
 
       unquote(msg_props.enum? && Protobuf.DSL.Enum.quoted_enum_functions(msg_props))
@@ -225,32 +225,6 @@ defmodule Protobuf.DSL do
         unquote(def_extension_functions())
       end
     end
-  end
-
-  defp def_t_typecheck_typespec(%MessageProps{enum?: true} = props) do
-    if Code.ensure_loaded?(TypeCheck) do
-      import Kernel, except: [@: 1]
-      quote do
-        use TypeCheck, overrides: [{&Protobuf.Wire.Types.wire_type/0, &Protobuf.TypeCheck.Wire.Types.wire_type/0}]
-
-        @type! t() :: unquote(Protobuf.DSL.Typespecs.quoted_enum_typespec(props))
-      end
-    end
-  end
-
-  defp def_t_typecheck_typespec(%MessageProps{} = props) do
-    if Code.ensure_loaded?(TypeCheck) do
-      import Kernel, except: [@: 1]
-      quote do
-        use TypeCheck, overrides: [{&Protobuf.Wire.Types.wire_type/0, &Protobuf.TypeCheck.Wire.Types.wire_type/0}]
-
-        @type! t()  :: unquote(Protobuf.DSL.Typespecs.quoted_message_typespec(props))
-      end
-    end
-  end
-
-  defp def_t_typecheck_typespec(_props) do
-    nil
   end
 
   defp def_t_typespec(%MessageProps{enum?: true} = props, _extension_props) do
